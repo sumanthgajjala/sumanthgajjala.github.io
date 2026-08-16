@@ -1,4 +1,4 @@
-import profileImage from '../assets/profile2.jpg'
+import profileImage from '../assets/profile.jpg'
 
 export default function Hero({ name, subtitle, location, intro, contact }) {
   return (

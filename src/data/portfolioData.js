@@ -26,18 +26,9 @@ export const portfolioData = {
   ],
   skills: [
     { category: 'Languages', items: 'Java, Python, JavaScript, HTML/CSS, SQL' },
-    {
-      category: 'Frameworks',
-      items: 'JAX-RS (Jersey), Jackson, React, Node.js, Vue.js, Express.js, Bootstrap',
-    },
-    {
-      category: 'Tools',
-      items: 'Git, GitHub Copilot, Maven, Node-RED, Docker, AWS, DigitalOcean, Subversion',
-    },
-    {
-      category: 'Data / Testing',
-      items: 'Postgres, SQL Server, MongoDB, JUnit, Jest, Pandas, NumPy, Matplotlib',
-    },
+    { category: 'Frameworks', items: 'JAX-RS (Jersey), Jackson, React, Node.js, Vue.js, Express.js, Bootstrap' },
+    { category: 'Tools', items: 'Git, GitHub Copilot, Maven, Node-RED, Docker, AWS, DigitalOcean, Subversion' },
+    { category: 'Data / Testing', items: 'Postgres, SQL Server, MongoDB, JUnit, Jest, Pandas, NumPy, Matplotlib' },
   ],
   experience: [
     {

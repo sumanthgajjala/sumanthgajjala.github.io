@@ -1,0 +1,58 @@
+name: Update Resume Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      resume_reference:
+        description: Optional commit SHA or note for the resume update context
+        required: false
+        type: string
+      additional_context:
+        description: Optional extra instructions for the agent
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue for Copilot cloud agent
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const resumeReference = core.getInput('resume_reference') || 'not provided';
+            const additionalContext = core.getInput('additional_context') || 'none';
+            const title = `Resume update task (${new Date().toISOString().slice(0, 10)})`;
+            const body = [
+              'Use Copilot coding agent to update portfolio content from `SumanthGajjalaResume.pdf`.',
+              '',
+              '### Required prompt',
+              'Use `.github/agent-prompts/resume-update.md` as the base instructions.',
+              '',
+              '### Inputs',
+              `- Resume reference: ${resumeReference}`,
+              `- Additional context: ${additionalContext}`,
+              '',
+              '### Expected output',
+              '- Branch + PR with scoped updates, primarily in `src/data/portfolioData.js`.',
+              '- Main Technologies (`topTech`) refreshed from latest resume content.',
+              '- Main Technologies icon classes (`topTech[].iconClass`) validated for the infinite-scroll icon wheel.',
+              '- Skills (`skills`) refreshed from latest resume content.',
+              '- Experience (`experience`) refreshed from latest resume content.',
+              '- Education (`education`) refreshed from latest resume content.',
+              '- `npm run build` passing.',
+              '- Summary of updated portfolio sections.',
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body
+            });
+
+            core.notice(`Created issue #${issue.data.number}: ${issue.data.html_url}`);

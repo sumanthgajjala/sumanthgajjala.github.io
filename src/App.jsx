@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './styles/app.css'
 import Education from './components/Education.jsx'
 import Experience from './components/Experience.jsx'
@@ -6,6 +6,13 @@ import Hero from './components/Hero.jsx'
 import IconGrid from './components/IconGrid.jsx'
 import Skills from './components/Skills.jsx'
 import { portfolioData } from './data/portfolioData.js'
+
+const SECTION_NAV_ITEMS = [
+  { id: 'about', label: 'About' },
+  { id: 'technologies-skills', label: 'Technologies & Skills' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'education', label: 'Education' }
+]
 
 function ThemeIcon({ mode }) {
   if (mode === 'system') {
@@ -34,12 +41,14 @@ function ThemeIcon({ mode }) {
 }
 
 export default function App() {
+  const pageRef = useRef(null)
   const [themePreference, setThemePreference] = useState(() => {
     const savedTheme = window.localStorage.getItem('theme-preference')
     return savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system'
       ? savedTheme
       : 'system'
   })
+  const [activeSectionId, setActiveSectionId] = useState(SECTION_NAV_ITEMS[0].id)
 
   useEffect(() => {
     const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -93,43 +102,105 @@ export default function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const page = pageRef.current
+    if (!page) {
+      return undefined
+    }
+
+    const sections = SECTION_NAV_ITEMS
+      .map(({ id }) => document.getElementById(id))
+      .filter((section) => section !== null)
+
+    if (sections.length === 0) {
+      return undefined
+    }
+
+    const sectionVisibility = new Map(sections.map((section) => [section.id, 0]))
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          sectionVisibility.set(entry.target.id, entry.intersectionRatio)
+        })
+
+        let nextSectionId = sections[0].id
+        let bestVisibility = -1
+
+        sectionVisibility.forEach((ratio, sectionId) => {
+          if (ratio > bestVisibility) {
+            bestVisibility = ratio
+            nextSectionId = sectionId
+          }
+        })
+
+        setActiveSectionId((currentSectionId) =>
+          currentSectionId === nextSectionId ? currentSectionId : nextSectionId
+        )
+      },
+      {
+        root: page,
+        threshold: [0.2, 0.35, 0.5, 0.65, 0.8]
+      }
+    )
+
+    sections.forEach((section) => observer.observe(section))
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
   return (
-    <main className="page">
-      <div className="parallax-accent parallax-accent-a" aria-hidden="true"></div>
-      <div className="parallax-accent parallax-accent-b" aria-hidden="true"></div>
-      <button
-        type="button"
-        className="theme-fab"
-        onClick={toggleTheme}
-        aria-label={`Theme mode: ${themePreference}. Click to cycle modes`}
-      >
-        <ThemeIcon mode={themePreference} />
-      </button>
+    <>
+      <nav className="scroll-snap-dots" aria-label="Section navigation">
+        {SECTION_NAV_ITEMS.map((section) => (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className={activeSectionId === section.id ? 'is-active' : ''}
+            aria-current={activeSectionId === section.id ? 'location' : undefined}
+            aria-label={`Jump to ${section.label}`}
+            onClick={() => setActiveSectionId(section.id)}
+          ></a>
+        ))}
+      </nav>
+      <main className="page" ref={pageRef}>
+        <div className="parallax-accent parallax-accent-a" aria-hidden="true"></div>
+        <div className="parallax-accent parallax-accent-b" aria-hidden="true"></div>
+        <button
+          type="button"
+          className="theme-fab"
+          onClick={toggleTheme}
+          aria-label={`Theme mode: ${themePreference}. Click to cycle modes`}
+        >
+          <ThemeIcon mode={themePreference} />
+        </button>
 
-      <section id="about" className="page-section about-section reveal-section">
-        <Hero
-          name={portfolioData.name}
-          subtitle={portfolioData.subtitle}
-          location={portfolioData.location}
-          intro={portfolioData.intro}
-          contact={portfolioData.contact}
-        />
-      </section>
+        <section id="about" className="page-section about-section reveal-section">
+          <Hero
+            name={portfolioData.name}
+            subtitle={portfolioData.subtitle}
+            location={portfolioData.location}
+            intro={portfolioData.intro}
+            contact={portfolioData.contact}
+          />
+        </section>
 
-      <section id="technologies-skills" className="page-section reveal-section">
-        <div className="tech-skills-flow">
-          <IconGrid topTech={portfolioData.topTech} />
-          <Skills skills={portfolioData.skills} />
-        </div>
-      </section>
+        <section id="technologies-skills" className="page-section reveal-section">
+          <div className="tech-skills-flow">
+            <IconGrid topTech={portfolioData.topTech} />
+            <Skills skills={portfolioData.skills} />
+          </div>
+        </section>
 
-      <section id="experience" className="page-section reveal-section">
-        <Experience experience={portfolioData.experience} />
-      </section>
+        <section id="experience" className="page-section reveal-section">
+          <Experience experience={portfolioData.experience} />
+        </section>
 
-      <section id="education" className="page-section reveal-section">
-        <Education education={portfolioData.education} />
-      </section>
-    </main>
+        <section id="education" className="page-section reveal-section">
+          <Education education={portfolioData.education} />
+        </section>
+      </main>
+    </>
   )
 }
